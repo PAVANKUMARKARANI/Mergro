@@ -1,7 +1,8 @@
 const mailConfig = {
   mailSettings: {
-    adminUrl : 'http://admin.demoproject29.dosystemsinc.com',
-serverUrl : 'http://api.demoproject29.dosystemsinc.com',
+    // Web page that handles /changeRecoverPassword/:enEmail?token=… links (set WEB_APP_URL in server/.env).
+    adminUrl : process.env.WEB_APP_URL || 'http://localhost:3000',
+serverUrl : process.env.API_URL || 'http://localhost:2282',
 
     websiteName: 'project',
     mailType: 'smtp',

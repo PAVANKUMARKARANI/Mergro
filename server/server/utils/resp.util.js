@@ -14,6 +14,9 @@ const getErrorResponse = (req) => {
   };
   if (req.duplicates && req.duplicates.length > 0)
     createErrObj.duplicates = req.duplicates;
+  // Lets clients tell an expired session apart from other 9001 errors.
+  if (req.i18nKey === 'sessionExperied' || req.i18nKey === 'tokenNotProvideMessage')
+    createErrObj.sessionExpired = true;
 
   return createErrObj;
 };

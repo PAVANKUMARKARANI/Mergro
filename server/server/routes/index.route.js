@@ -72,4 +72,11 @@ const employeeRoutes = require("./employee.route");
 // mount employee routes at /employees
 router.use("/employees", employeeRoutes);
 
+// Mergro mobile app
+const onboardingRoutes = require("./onboarding.route");
+router.use("/onboarding", onboardingRoutes);
+
+const teamRoutes = require("./team.route");
+router.use("/team", teamRoutes);
+
 export default router;

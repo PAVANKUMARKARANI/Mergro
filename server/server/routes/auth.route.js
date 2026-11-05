@@ -5,6 +5,8 @@ import authCtrl from '../controllers/auth.controller';
 import config from '../config/config';
 import asyncHandler from 'express-async-handler';
 import authPolicy from '../middlewares/authenticate';
+import requireEmployee from '../middlewares/requireEmployee';
+import accountCtrl from '../controllers/account.controller';
 
 const router = express.Router(); // eslint-disable-line new-cap
 
@@ -17,6 +19,10 @@ router.route('/login')
     asyncHandler(authCtrl.login));
 
 router.route('/token').post(authPolicy.oauthToken, authCtrl.sendLoginResponse);
+
+/** GET /api/auth/me - the signed-in user, brokerage name and onboarding state */
+router.route('/me')
+  .get(asyncHandler(authPolicy.isAllowed), requireEmployee, asyncHandler(accountCtrl.me));
 
 /** POST /api/auth/logout */
 router.route('/logout').all(authPolicy.isAllowed)

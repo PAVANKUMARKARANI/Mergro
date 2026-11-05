@@ -29,6 +29,12 @@ import Token from "../models/token.model";
 
 const emailService = new EmailService();
 import smsService from "../services/otp.service";
+import {
+  RESET_TOKEN_TTL_MS,
+  clearResetToken,
+  issueResetToken,
+  verifyResetToken,
+} from "../services/resetToken.service";
 const controller = "Auth";
 const validLoginTypes = ["user", "employee", "employee"];
 
@@ -128,7 +134,7 @@ async function checkDeviceInfo(req, details) {
  */
 async function login(req, res, next) {
   logger.info(
-    "Log:Auth Controller:login: body :" + JSON.stringify(req.body),
+    "Log:Auth Controller:login: email :" + req.body.email, // never log the password
     controller
   );
   req.i18nKey = "loginError";
@@ -216,6 +222,10 @@ async function login(req, res, next) {
 
   req.details.password = undefined;
   req.details.salt = undefined;
+  req.details.resetPasswordTokenHash = undefined;
+  req.details.resetPasswordExpires = undefined;
+  req.details.base32Secrect = undefined;
+  req.details.otp = undefined;
   req[entityType] = req.details;
   req.i18nKey = "loginSuccessMessage";
   loginResponse(req, res, req.details);
@@ -319,6 +329,9 @@ async function forgotPassword(req, res) {
     return res.json(respUtil.getErrorResponse(req));
   }
   req.enEmail = serviceUtil.encodeString(req.details.email);
+  // Single-use secret for the reset link; changeRecoverPassword rejects requests without it.
+  const resetToken = issueResetToken(req.details, RESET_TOKEN_TTL_MS);
+  const settings = await settingsModel.findOne({ active: true });
   req.details.forgotPasswordExpireTimeStamp =
     settings && settings.forgotEmailInterval
       ? new Date().getTime() + settings.forgotEmailInterval * 60 * 1000
@@ -332,7 +345,7 @@ async function forgotPassword(req, res) {
     emailParams: {
       to: req.details.email,
       displayName: req.details.displayName,
-      link: `${req.url}/changeRecoverPassword/${req.enEmail}`,
+      link: `${req.url}/changeRecoverPassword/${req.enEmail}?token=${resetToken}`,
     },
   });
   req.entityType = `${req.body.entityType}`;
@@ -380,6 +393,11 @@ async function changeRecoverPassword(req, res) {
     );
     return res.json(respUtil.getErrorResponse(req));
   }
+  // The emailed token proves the request came from the reset / invite link.
+  if (!verifyResetToken(req.details, req.body.token)) {
+    req.errorMessage = "This link is invalid or has expired. Request a new one.";
+    return res.json(respUtil.getErrorResponse(req));
+  }
   let passwordDetails = req.body;
   if (
     passwordDetails.newPassword &&
@@ -404,6 +422,10 @@ async function changeRecoverPassword(req, res) {
     return res.json(respUtil.getErrorResponse(req));
   }
   req.details.password = passwordDetails.newPassword;
+  clearResetToken(req.details);
+  req.details.forgotPasswordExpireTimeStamp = undefined;
+  // Setting a password from an invite link activates the account.
+  if (req.details.status === "Invited") req.details.status = config.commonStatus.Active;
   if (entityType === "employee") await Employee.saveData(req.details);
 
   req.activityKey = `${req.body.entityType}ChangePassword`;

@@ -66,6 +66,31 @@ let defaultSchemaValues = {
     ref: "Employees",
   },
   reportingToSearch: String,
+
+  /** Mergro: Active | Invited | Inactive. Login requires Active. */
+  status: { type: String, default: "Active" },
+  brokerageId: { type: Schema.ObjectId, ref: "Brokerage" },
+  invitedBy: { type: Schema.ObjectId, ref: "Employees" },
+  onboardingCompleted: { type: Boolean, default: false },
+  languages: [String],
+  alertPreferences: {
+    pushEnabled: Boolean,
+    smsFallbackEnabled: Boolean,
+    soundEnabled: Boolean,
+    quietStart: String,
+    quietEnd: String,
+  },
+  /** Personal viewing availability (agent calendar step). */
+  availability: {
+    viewingMinutes: Number,
+    bufferMinutes: Number,
+    days: [Number],
+    startTime: String,
+    endTime: String,
+  },
+  /** sha256 of the single-use password reset / invite token, and its expiry (ms). */
+  resetPasswordTokenHash: String,
+  resetPasswordExpires: Number,
 };
 
 /**

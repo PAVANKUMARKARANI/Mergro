@@ -1,3 +1,38 @@
+# Mergro API
+
+Backend for the Mergro mobile app (`~/Projects/Mergro-Mobile-App`), built on the Express + MongoDB
+template described further below.
+
+## Run locally
+
+1. `npm install` (Node 22 per `package.json`; also verified on Node 26).
+2. `cp .env.example .env` and fill in `MONGO_HOST`, `JWTSECRET` and the other values. `.env` is
+   git-ignored; never commit secrets or put them in code.
+3. `npm run seed` once: creates the `settings` document, the 5 Mergro roles, the reset/invite email
+   templates and demo users `admin@yopmail.com`, `agent@yopmail.com`, `lead@yopmail.com` with
+   password `Emp1234$` (set `SEED_USER_PASSWORD` to choose another). Safe to re-run.
+4. `node server-start.js` → `http://localhost:2282/api` (health check: `/api/health-check`).
+
+## Endpoints used by the app
+
+| Method | Path | Notes |
+|--------|------|-------|
+| POST | `/api/auth/login` | `{email, password, entityType: "employee"}` → `accessToken` |
+| GET | `/api/auth/me` | Bearer token → user, `brokerageName`, `onboardingCompleted` |
+| POST | `/api/auth/logout` | Ends the session |
+| POST | `/api/auth/forgotPassword?email=` | `{entityType: "employee"}`; emails a single-use reset link |
+| POST | `/api/auth/changeRecoverPassword` | `{enEmail, token, newPassword, confirmPassword, entityType}`; also activates invited users |
+| GET | `/api/onboarding` | Role, steps, completed/skipped steps, saved drafts |
+| PUT | `/api/onboarding/steps/:stepId` | `{data}` (validated in `services/onboardingSteps.js`) or `{skipped: true}` |
+| POST | `/api/onboarding/complete` | Needs every required step; activates an admin's brokerage |
+| POST | `/api/team/invites` | Admins: `{invites: [{email, role}]}` → per-email results |
+
+Errors follow the template: HTTP 200 with `{errorCode: "9001", errorMessage}`; expired sessions
+also carry `sessionExpired: true`. Emails are only sent when the `settings` document has
+`enableMails: true`, `sendGridApiKey` and `sendGridEmail`; links point at `WEB_APP_URL`.
+
+---
+
 [![Gitter](https://badges.gitter.im/JoinChat.svg)](https://gitter.im/linnovate/mean?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
 # [![MEAN Logo](http://mean.io/wp-content/themes/twentysixteen-child/images/meanlogo.png)](http://mean.io/) MEAN<sup>2</sup>

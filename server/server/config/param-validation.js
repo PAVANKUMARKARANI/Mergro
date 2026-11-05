@@ -43,6 +43,7 @@ exports.validateCheck = (method) => {
     case 'changeRecoveryPassword': {
       return [
         check('enEmail', 'please provide enEmail in body').exists(),
+        check('token', 'please provide the reset token from the email link').isString().notEmpty(),
         check('newPassword', 'please provide newPassword in body').exists(),
         check('confirmPassword', 'please provide confirmPassword in body').exists(),
         check('entityType', 'please provide entityType in body').exists(),
