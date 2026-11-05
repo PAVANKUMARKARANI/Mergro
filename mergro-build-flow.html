@@ -148,8 +148,8 @@ figcaption b { color: var(--ink); }
       <h3>Already built</h3>
       <ul>
         <li>App, connected to the server: splash, login, forgot password, onboarding for admin, agent and team lead, sign-out</li>
-        <li>App, UI with demo data: app shell with role-based tabs, Home dashboard (4), Leads + search (5, 11), Live calls (6), Hot lead inbox (7), Viewings (8), Nurture (9), Profile (10)</li>
-        <li>App, UI with demo data: Lead profile (13) with qualification (16), score (17), activity (19) and consent (20); call-back, message and do-not-contact actions</li>
+        <li>App, connected to <code>/api/leads</code>: Leads + search (5, 11), Lead profile (13) with qualification (16), score (17), activity (19) and consent (20); consent withdrawal and do-not-contact; call-back and message are recorded until telephony and messaging exist; dashboard new / qualified / contact-rate counts</li>
+        <li>App, UI with demo data: app shell with role-based tabs, Home dashboard (4) speed-to-lead, Live calls (6), Hot lead inbox (7), Viewings (8), Nurture (9), Profile (10)</li>
         <li>App, UI with demo data: Live call monitor (12), Call detail (14), Transcript with masked personal data (15), Book viewing with a 5-minute hold (18)</li>
         <li>App: Light / Dark / System theme choice, skeleton loading on every list</li>
         <li>Server: <code>/api/auth/*</code>, <code>/api/onboarding/*</code>, <code>/api/team/invites</code>, 5 roles, seed users</li>
@@ -159,8 +159,7 @@ figcaption b { color: var(--ink); }
     <div>
       <h3>Build next</h3>
       <ul>
-        <li>App: handoff module (21–26) as UI with demo data, or connect screens to the lead / call API as it lands</li>
-        <li>App: connect Leads, the lead profile and dashboard counts to <code>/api/leads</code></li>
+        <li>App: handoff module (21–26) as UI with demo data, or connect screens to the call / handoff / viewing APIs as they land</li>
         <li>Server: call job queue and telephony adapter (Voice AI phase)</li>
       </ul>
     </div>
@@ -211,7 +210,7 @@ figcaption b { color: var(--ink); }
           <div class="item"><span>Consent + calling-hours eligibility</span><i class="chip done">Done</i></div>
           <div class="item"><span>Environments, CI/CD, secrets</span><i class="chip next">Next</i></div>
         </div>
-        <div class="contract"><div><code>/api/auth · /api/onboarding · /api/leads</code><small>done · app connects to leads next</small></div></div>
+        <div class="contract"><div><code>/api/auth · /api/onboarding · /api/leads</code><small>done · connected in the app</small></div></div>
         <div class="lane fe"><span class="tag">App</span>
           <div class="item"><span>Splash, login, onboarding (1–3)</span><i class="chip done">Done</i></div>
           <div class="item"><span>App shell, role-based tabs</span><i class="chip done">Done</i></div>
@@ -229,8 +228,8 @@ figcaption b { color: var(--ink); }
         </div>
         <div class="contract"><div><code>/api/leads · /api/calls</code><small>+ socket.io call events</small></div></div>
         <div class="lane fe"><span class="tag">App</span>
-          <div class="item"><span>Leads + search (5, 11)</span><i class="chip ui">UI ready</i></div>
-          <div class="item"><span>Lead profile (13)</span><i class="chip ui">UI ready</i></div>
+          <div class="item"><span>Leads + search (5, 11), on the API</span><i class="chip done">Done</i></div>
+          <div class="item"><span>Lead profile (13), on the API; its calls wait for /api/calls</span><i class="chip done">Done</i></div>
           <div class="item"><span>Live calls (6)</span><i class="chip ui">UI ready</i></div>
           <div class="item"><span>Live call monitor (12)</span><i class="chip ui">UI ready</i></div>
           <div class="item"><span>Qualification + score (16, 17), on the profile</span><i class="chip ui">UI ready</i></div>
