@@ -1,0 +1,10 @@
+{
+    "to": "String",
+    "from": "String",
+    "subject": "String",
+    "html": "String",
+    "templateName": "String",
+    "status": "String",
+    "reason": "String",
+    "entityType": "String"
+  }

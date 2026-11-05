@@ -1,0 +1,68 @@
+{
+  "contextType": {
+    "type": "String"
+  },
+  "context": {
+    "type": "String"
+  },
+  "desc": {
+    "type": "String"
+  },
+  "value": {
+    "type": "String"
+  },
+  "type": {
+    "type": "String"
+  },
+  "name": {
+    "type": "String"
+  },
+  "key": {
+    "type": "String"
+  },
+  "description": {
+    "type": "String"
+  },
+  "activityType": {
+    "type": "String"
+  },
+  "userName": {
+    "type": "String"
+  },
+  "ipAddress": {
+    "type": "String"
+  },
+  "browserName": {
+    "type": "String"
+  },
+  "osName": {
+    "type": "String"
+  },
+  "osVersion": {
+    "type": "String"
+  },
+  "deviceType": {
+    "type": "String"
+  },
+  "location": {
+    "type": "String"
+  },
+  "country": {
+    "type": "String"
+  },
+  "device": {
+    "type": "String"
+  },
+  "email": {
+    "type": "String"
+  },
+  "loginFrom": {
+    "type": "String"
+  },
+  "loginType": {
+    "type": "String"
+  },
+  "requestJson": {
+    "type": "Object"
+  }
+}

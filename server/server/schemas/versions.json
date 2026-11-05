@@ -1,0 +1,17 @@
+{
+  "name": "String",
+  "created": "Date",
+  "updated": "Date",
+  "employee": "String",
+  "issue": "String",
+  "inventory": "String",
+  "serialNumber": "String",
+  "contextType": "String",
+  "comments": "String",
+  "attachment": "String",
+  "type": "String",
+  "size": "String",
+  "path": "String",
+  "versionType": "String",
+  "createdBy": "String"
+}

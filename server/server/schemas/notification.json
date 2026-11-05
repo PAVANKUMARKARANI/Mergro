@@ -1,0 +1,20 @@
+{
+  "userName": {
+    "type": "String"
+  },
+  "userEmail": {
+    "type": "String"
+  },
+  "type": {
+    "type": "String"
+  },
+  "status": {
+    "type": "String"
+  },
+  "body": {
+    "type": "String"
+  },
+  "title": {
+    "type": "String"
+  }
+}

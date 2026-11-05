@@ -1,0 +1,23 @@
+{
+  "token": {
+    "type": "String"
+  },
+  "email": {
+    "type": "String"
+  },
+  "type": {
+    "type": "String"
+  },
+  "login": {
+    "type": "String"
+  },
+  "createdTimeStamp": {
+    "type": "Number"
+  },
+  "expireTimeStamp": {
+    "type": "Number"
+  },
+  "redirectUrl": {
+    "type": "String"
+  }
+}

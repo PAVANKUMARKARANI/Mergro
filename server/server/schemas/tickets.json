@@ -1,0 +1,59 @@
+{
+  "subject": {
+    "type": "String",
+    "default": ""
+  },
+  "emailId": {
+    "type": "String"
+  },
+  "message": {
+    "type": "String",
+    "default": ""
+  },
+  "updated": {
+    "type": "Date"
+  },
+  "active": {
+    "type": "Boolean",
+    "default": true
+  },
+  "category": {
+    "type": "String",
+    "default": ""
+  },
+  "ticketId": {
+    "type": "String",
+    "default": ""
+  },
+  "ticketNumber": {
+    "type": "String",
+    "default": ""
+  },
+  "status": {
+    "type": "String",
+    "default": "New"
+  },
+  "userId": {
+    "type": "String",
+    "default": ""
+  },
+  "userName": {
+    "type": "String",
+    "default": ""
+  },
+  "userLastUpdated": {
+    "type": "Date"
+  },
+  "adminLastUpdated": {
+    "type": "Date"
+  },
+  "priority":{
+    "type": "String"
+  },
+  "screenOrModule":{
+    "type": "String"
+  },
+  "description":{
+    "type": "String"
+  }
+}

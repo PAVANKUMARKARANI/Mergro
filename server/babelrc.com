@@ -1,0 +1,10 @@
+{
+  "presets": [
+    "env"
+  ],
+  "plugins": [
+    "transform-es2015-destructuring",
+    "transform-object-rest-spread",
+    "syntax-async-functions"
+  ]
+}

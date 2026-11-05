@@ -1,0 +1,10 @@
+{
+  "icon": "String",
+  "displayTitle": "String",
+  "title": "String",
+  "route": "String",
+  "submenus": "Object",
+  "iconType": "String",
+  "iconLetters": "String",
+  "iconName": "String"
+}
