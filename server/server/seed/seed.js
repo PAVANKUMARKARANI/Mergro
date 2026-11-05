@@ -6,6 +6,8 @@ import Template from "../models/templates.model";
 import Employee from "../models/employee.model";
 import Brokerage from "../models/brokerage.model";
 import { ROLES } from "../services/onboardingSteps";
+import { hashIngestKey, newIngestKey } from "../middlewares/ingestKey";
+import seedDemoLeads from "./demoLeads";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -89,6 +91,25 @@ export default async function seed() {
       console.log(`  + user ${u.email} (${u.role})`);
     }
     console.log("  Demo users created with the demo password (see README).");
+  }
+  // The demo admin's brokerage, whatever onboarding renamed it to.
+  const demoAdmin = await Employee.findOne({ email: "admin@yopmail.com" });
+  const demoBrokerage = demoAdmin && demoAdmin.brokerageId
+    ? await Brokerage.findById(demoAdmin.brokerageId)
+    : await Brokerage.findOne({ name: "Demo Realty" });
+  if (demoBrokerage) {
+    const agent = await Employee.findOne({ email: "agent@yopmail.com" });
+    const added = await seedDemoLeads(demoBrokerage, agent);
+    if (added) console.log(`  + ${added} demo leads for ${demoBrokerage.name}`);
+    if (!demoBrokerage.ingestKeyHash) {
+      const key = newIngestKey();
+      demoBrokerage.ingestKeyHash = hashIngestKey(key);
+      demoBrokerage.ingestKeyPrefix = key.slice(0, 8);
+      demoBrokerage.ingestKeyCreatedAt = new Date();
+      await demoBrokerage.save();
+      // Shown once, like the admin endpoint; rotate with POST /api/brokerage/ingest-key.
+      console.log(`  + ${demoBrokerage.name} lead-ingestion key (x-mergro-key): ${key}`);
+    }
   }
   console.log("Seed complete.");
   await mongoose.disconnect();

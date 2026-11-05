@@ -1,7 +1,7 @@
 import ApiStats from "../models/api.stats.model";
 
-/** Field names whose values must never be stored in apistats. */
-const SENSITIVE = /^(password|newPassword|confirmPassword|currentPassword|token|accessToken|refreshToken|idToken|otp|salt)$/i;
+/** Field names whose values never reach apistats: secrets and lead personal data. */
+const SENSITIVE = /^(password|newPassword|confirmPassword|currentPassword|token|accessToken|refreshToken|idToken|otp|salt|phone|email|mobileNumber|text|name|q)$/i;
 
 /** Copy of a body/query object with sensitive values replaced by "[REDACTED]". */
 function redact(value, depth = 0) {
@@ -15,7 +15,7 @@ function redact(value, depth = 0) {
 }
 
 /** Removes token values from a URL's query string. */
-const redactUrl = (url) => (url ? url.replace(/([?&](?:token|accessToken|refreshToken)=)[^&]*/gi, "$1[REDACTED]") : url);
+const redactUrl = (url) => (url ? url.replace(/([?&](?:token|accessToken|refreshToken|email|q)=)[^&]*/gi, "$1[REDACTED]") : url);
 
 export default async function(req,res,next){
     /**@host is deprecated from express */

@@ -1,0 +1,499 @@
+<title>Mergro Build Flow</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: a build manual. Phase ledger first (backend | API contract | app), then one figure per flow. */
+:root {
+  --paper: #EDF0F6; --sheet: #FFFFFF; --ink: #141D33; --ink-2: #56607A; --rule: #D3D9E6;
+  --navy: #12224A; --navy-fg: #FFFFFF; --navy-2: #C3CEEA; --teal: #0E9482;
+  --be-bg: #EDF4FF; --be-bd: #8DB3EC; --be-tx: #1D5BB5;
+  --fe-bg: #F3F0FF; --fe-bd: #A497EE; --fe-tx: #4A39B3;
+  --done-bg: #E3F5EA; --done-tx: #1C7643;
+  --next-bg: #FFF1D6; --next-tx: #8A5600;
+  --plan-bg: #EEF1F7; --plan-tx: #56607A;
+  --ui-bg: #F3F0FF; --ui-tx: #4A39B3;
+  --f-display: "Sora", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --f-body: "Figtree", "Helvetica Neue", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "JetBrains Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #090E1B; --sheet: #0F172B; --ink: #E5EAF5; --ink-2: #A3AEC7; --rule: #26324D;
+    --navy: #0A1532; --navy-fg: #FFFFFF; --navy-2: #AEBBDD; --teal: #3CC9B4;
+    --be-bg: #112447; --be-bd: #4A7AC6; --be-tx: #9DC3FF;
+    --fe-bg: #1F1B42; --fe-bd: #6E5FD0; --fe-tx: #C3B9FF;
+    --done-bg: #0E2B1D; --done-tx: #8FDDAE;
+    --next-bg: #33260B; --next-tx: #F4C46D;
+    --plan-bg: #19203A; --plan-tx: #A3AEC7;
+    --ui-bg: #1F1B42; --ui-tx: #C3B9FF;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #090E1B; --sheet: #0F172B; --ink: #E5EAF5; --ink-2: #A3AEC7; --rule: #26324D;
+  --navy: #0A1532; --navy-fg: #FFFFFF; --navy-2: #AEBBDD; --teal: #3CC9B4;
+  --be-bg: #112447; --be-bd: #4A7AC6; --be-tx: #9DC3FF;
+  --fe-bg: #1F1B42; --fe-bd: #6E5FD0; --fe-tx: #C3B9FF;
+  --done-bg: #0E2B1D; --done-tx: #8FDDAE;
+  --next-bg: #33260B; --next-tx: #F4C46D;
+  --plan-bg: #19203A; --plan-tx: #A3AEC7;
+  --ui-bg: #1F1B42; --ui-tx: #C3B9FF;
+  color-scheme: dark;
+}
+
+body { background: var(--paper); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.5; }
+.wrap { max-width: 1120px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 0 48px; }
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; margin: 0; }
+p { margin: 0; }
+code, .mono { font-family: var(--f-mono); font-size: 12.5px; }
+
+.hero { background: var(--navy); color: var(--navy-fg); }
+.hero .wrap { padding-block: 36px 32px; display: grid; gap: 14px; }
+.eyebrow { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--navy-2); font-weight: 600; }
+.hero h1 { font-size: clamp(26px, 4vw, 36px); }
+.hero p { color: var(--navy-2); max-width: 70ch; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 14px; margin-top: 6px; font-size: 13px; color: var(--navy-2); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+
+.chip { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+.chip.done { background: var(--done-bg); color: var(--done-tx); }
+.chip.next { background: var(--next-bg); color: var(--next-tx); }
+.chip.plan { background: var(--plan-bg); color: var(--plan-tx); }
+.chip.ui { background: var(--ui-bg); color: var(--ui-tx); }
+
+.now { margin-top: -18px; background: var(--sheet); border: 1px solid var(--rule); border-radius: 14px; padding: 18px 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px 28px; }
+.now h3 { font-size: 14px; margin-bottom: 6px; }
+.now ul { margin: 0; padding-left: 18px; color: var(--ink-2); font-size: 14px; }
+
+section { margin-top: 44px; display: grid; gap: 14px; }
+.sec-head { display: grid; gap: 6px; }
+.sec-head .eyebrow { color: var(--teal); }
+.sec-head h2 { font-size: 22px; }
+.sec-head p { color: var(--ink-2); max-width: 75ch; }
+
+/* Phase ledger */
+.ledger { display: grid; gap: 10px; }
+.ledger-head, .phase { display: grid; grid-template-columns: 150px 1fr 190px 1fr; gap: 12px; align-items: stretch; }
+.ledger-head { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); padding: 0 4px; }
+.phase-name { padding: 12px 4px; border-top: 2px solid var(--ink); }
+.phase-name b { display: block; font-family: var(--f-display); font-size: 15px; }
+.phase-name span { font-family: var(--f-mono); font-size: 12px; color: var(--ink-2); }
+.lane { border-radius: 12px; padding: 12px 14px; display: grid; gap: 7px; align-content: start; border: 1px solid; }
+.lane.be { background: var(--be-bg); border-color: var(--be-bd); }
+.lane.fe { background: var(--fe-bg); border-color: var(--fe-bd); }
+.lane .tag { display: none; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.lane.be .tag { color: var(--be-tx); } .lane.fe .tag { color: var(--fe-tx); }
+.item { display: flex; gap: 8px; align-items: baseline; justify-content: space-between; font-size: 14px; }
+.item > span:first-child { min-width: 0; }
+.contract { display: grid; place-items: center; text-align: center; position: relative; padding: 8px 4px; }
+.contract::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; border-top: 2px dashed var(--rule); }
+.contract div { position: relative; background: var(--paper); padding: 6px 8px; display: grid; gap: 2px; }
+.contract code { color: var(--ink); }
+.contract small { color: var(--ink-2); font-size: 12px; }
+
+/* Per-feature strip */
+.strip { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 6px; }
+.step { background: var(--sheet); border: 1px solid var(--rule); border-radius: 10px; padding: 10px; display: grid; gap: 4px; align-content: start; position: relative; }
+.step b { font-family: var(--f-mono); font-size: 12px; color: var(--ink-2); }
+.step p { font-size: 13px; font-weight: 600; }
+.step small { font-size: 12px; color: var(--ink-2); }
+.step.be { border-top: 3px solid var(--be-bd); } .step.fe { border-top: 3px solid var(--fe-bd); }
+
+/* Figures */
+figure { margin: 0; background: var(--sheet); border: 1px solid var(--rule); border-radius: 14px; overflow: hidden; }
+.fig-body { overflow-x: auto; padding: 16px; }
+.fig-body pre.mermaid { margin: 0 auto; width: max-content; background: transparent; font-family: var(--f-body); }
+figcaption { padding: 12px 16px; border-top: 1px solid var(--rule); font-size: 13.5px; color: var(--ink-2); }
+figcaption b { color: var(--ink); }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.two > * { min-width: 0; }
+
+.notes { background: var(--sheet); border: 1px solid var(--rule); border-radius: 14px; padding: 16px 20px; }
+.notes ul { margin: 6px 0 0; padding-left: 18px; color: var(--ink-2); font-size: 14px; display: grid; gap: 4px; }
+
+@media (max-width: 900px) {
+  .strip { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .two { grid-template-columns: 1fr; }
+}
+@media (max-width: 760px) {
+  .ledger-head { display: none; }
+  .phase { grid-template-columns: 1fr; gap: 8px; }
+  .lane .tag { display: block; }
+  .contract { place-items: start; text-align: left; }
+  .contract::before { display: none; }
+  .contract div { padding: 0 4px; }
+  .strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+</style>
+
+<header class="hero">
+  <div class="wrap">
+    <span class="eyebrow">Mergro · implementation plan · W1–W16 · updated 5 Nov 2026</span>
+    <h1>How the backend and the app get built</h1>
+    <p>The backend is the Express + MongoDB server in <code>Mergro/server</code>, and the app is the Flutter + Riverpod project in <code>Mergro-Mobile-App</code>. Phases and weeks come from the project spreadsheet's 16-week roadmap.</p>
+    <div class="legend">
+      <span><i class="chip done">Done</i> built and in the code today</span>
+      <span><i class="chip ui">UI ready</i> screen built with demo data, API not connected yet</span>
+      <span><i class="chip next">Next</i> start now</span>
+      <span><i class="chip plan">Planned</i> later phase</span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="now">
+    <div>
+      <h3>Already built</h3>
+      <ul>
+        <li>App, connected to the server: splash, login, forgot password, onboarding for admin, agent and team lead, sign-out</li>
+        <li>App, UI with demo data: app shell with role-based tabs, Home dashboard (4), Leads + search (5, 11), Live calls (6), Hot lead inbox (7), Viewings (8), Nurture (9), Profile (10)</li>
+        <li>App, UI with demo data: Lead profile (13) with qualification (16), score (17), activity (19) and consent (20); call-back, message and do-not-contact actions</li>
+        <li>App, UI with demo data: Live call monitor (12), Call detail (14), Transcript with masked personal data (15), Book viewing with a 5-minute hold (18)</li>
+        <li>App: Light / Dark / System theme choice, skeleton loading on every list</li>
+        <li>Server: <code>/api/auth/*</code>, <code>/api/onboarding/*</code>, <code>/api/team/invites</code>, 5 roles, seed users</li>
+        <li>Server: leads API — ingestion webhook with per-brokerage key, dedupe, consent and calling-hours eligibility, list / profile / timeline, consent withdrawal, suppression</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Build next</h3>
+      <ul>
+        <li>App: handoff module (21–26) as UI with demo data, or connect screens to the lead / call API as it lands</li>
+        <li>App: connect Leads, the lead profile and dashboard counts to <code>/api/leads</code></li>
+        <li>Server: call job queue and telephony adapter (Voice AI phase)</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 1. Phase ledger -->
+  <section>
+    <div class="sec-head">
+      <span class="eyebrow">Fig. 1 · Master flow</span>
+      <h2>Both tracks, phase by phase</h2>
+      <p>Each row is one phase. The backend builds on the left, the app builds on the right, and the middle column is the API they agree on, so neither side waits on the other.</p>
+    </div>
+    <div class="ledger">
+      <div class="ledger-head"><span>Phase</span><span>Backend · Express + MongoDB</span><span>API contract</span><span>App · Flutter + Riverpod</span></div>
+
+      <div class="phase">
+        <div class="phase-name"><b>1. Discovery</b><span>W1–W2</span></div>
+        <div class="lane be"><span class="tag">Backend</span>
+          <div class="item"><span>Zoho, calendar, telephony and messaging access</span><i class="chip plan">Planned</i></div>
+          <div class="item"><span>Compliance matrix: calling hours, DND, consent</span><i class="chip plan">Planned</i></div>
+        </div>
+        <div class="contract"><div><code>KPI + lead definitions</code><small>hot lead, qualified, booking</small></div></div>
+        <div class="lane fe"><span class="tag">App</span>
+          <div class="item"><span>Screen flow, 50 screens</span><i class="chip done">Done</i></div>
+          <div class="item"><span>Personas and roles</span><i class="chip done">Done</i></div>
+        </div>
+      </div>
+
+      <div class="phase">
+        <div class="phase-name"><b>2. Architecture</b><span>W3–W4</span></div>
+        <div class="lane be"><span class="tag">Backend</span>
+          <div class="item"><span>Data model: lead, consent, timeline</span><i class="chip done">Done</i></div>
+          <div class="item"><span>Data model: call, booking</span><i class="chip next">Next</i></div>
+          <div class="item"><span>Call script, qualification tree, scoring rubric</span><i class="chip plan">Planned</i></div>
+        </div>
+        <div class="contract"><div><code>Data dictionary</code><small>becomes Mongoose + Dart models</small></div></div>
+        <div class="lane fe"><span class="tag">App</span>
+          <div class="item"><span>Design system and shared widgets</span><i class="chip done">Done</i></div>
+          <div class="item"><span>Feature folders, Riverpod rules</span><i class="chip done">Done</i></div>
+        </div>
+      </div>
+
+      <div class="phase">
+        <div class="phase-name"><b>3. Foundation</b><span>W4–W5</span></div>
+        <div class="lane be"><span class="tag">Backend</span>
+          <div class="item"><span>Auth, roles, onboarding, team invites</span><i class="chip done">Done</i></div>
+          <div class="item"><span>Lead ingestion: validate, dedupe, audit</span><i class="chip done">Done</i></div>
+          <div class="item"><span>Consent + calling-hours eligibility</span><i class="chip done">Done</i></div>
+          <div class="item"><span>Environments, CI/CD, secrets</span><i class="chip next">Next</i></div>
+        </div>
+        <div class="contract"><div><code>/api/auth · /api/onboarding · /api/leads</code><small>done · app connects to leads next</small></div></div>
+        <div class="lane fe"><span class="tag">App</span>
+          <div class="item"><span>Splash, login, onboarding (1–3)</span><i class="chip done">Done</i></div>
+          <div class="item"><span>App shell, role-based tabs</span><i class="chip done">Done</i></div>
+          <div class="item"><span>Home dashboard (4)</span><i class="chip ui">UI ready</i></div>
+          <div class="item"><span>Profile (10), theme choice</span><i class="chip ui">UI ready</i></div>
+        </div>
+      </div>
+
+      <div class="phase">
+        <div class="phase-name"><b>4. Voice AI</b><span>W6–W8</span></div>
+        <div class="lane be"><span class="tag">Backend</span>
+          <div class="item"><span>Outbound calls + status webhooks</span><i class="chip plan">Planned</i></div>
+          <div class="item"><span>Voice runtime: speech-to-text → LLM → text-to-speech</span><i class="chip plan">Planned</i></div>
+          <div class="item"><span>Qualification extraction, scoring rules</span><i class="chip plan">Planned</i></div>
+        </div>
+        <div class="contract"><div><code>/api/leads · /api/calls</code><small>+ socket.io call events</small></div></div>
+        <div class="lane fe"><span class="tag">App</span>
+          <div class="item"><span>Leads + search (5, 11)</span><i class="chip ui">UI ready</i></div>
+          <div class="item"><span>Lead profile (13)</span><i class="chip ui">UI ready</i></div>
+          <div class="item"><span>Live calls (6)</span><i class="chip ui">UI ready</i></div>
+          <div class="item"><span>Live call monitor (12)</span><i class="chip ui">UI ready</i></div>
+          <div class="item"><span>Qualification + score (16, 17), on the profile</span><i class="chip ui">UI ready</i></div>
+          <div class="item"><span>Call detail + transcript (14, 15)</span><i class="chip ui">UI ready</i></div>
+        </div>
+      </div>
+
+      <div class="phase">
+        <div class="phase-name"><b>5. Integrations</b><span>W8–W10</span></div>
+        <div class="lane be"><span class="tag">Backend</span>
+          <div class="item"><span>Zoho CRM sync with retries</span><i class="chip plan">Planned</i></div>
+          <div class="item"><span>Calendar: availability, 5-min hold, booking</span><i class="chip plan">Planned</i></div>
+          <div class="item"><span>Hot-lead queue + push notifications</span><i class="chip plan">Planned</i></div>
+        </div>
+        <div class="contract"><div><code>/api/handoffs · /api/viewings</code><small>+ FCM push payload</small></div></div>
+        <div class="lane fe"><span class="tag">App</span>
+          <div class="item"><span>Hot lead inbox (7)</span><i class="chip ui">UI ready</i></div>
+          <div class="item"><span>Handoff module (21–26)</span><i class="chip next">Next</i></div>
+          <div class="item"><span>Viewings (8)</span><i class="chip ui">UI ready</i></div>
+          <div class="item"><span>Book viewing (18)</span><i class="chip ui">UI ready</i></div>
+        </div>
+      </div>
+
+      <div class="phase">
+        <div class="phase-name"><b>6. Nurture &amp; UX</b><span>W10–W12</span></div>
+        <div class="lane be"><span class="tag">Backend</span>
+          <div class="item"><span>SMS, WhatsApp, email connectors</span><i class="chip plan">Planned</i></div>
+          <div class="item"><span>Cadence engine: Day 1/2/4/7, quiet hours, stops</span><i class="chip plan">Planned</i></div>
+          <div class="item"><span>Dashboard, analytics and admin APIs</span><i class="chip plan">Planned</i></div>
+        </div>
+        <div class="contract"><div><code>/api/nurture · /api/analytics</code><small>+ <span class="mono">/api/admin</span></small></div></div>
+        <div class="lane fe"><span class="tag">App</span>
+          <div class="item"><span>Nurture (9)</span><i class="chip ui">UI ready</i></div>
+          <div class="item"><span>Journeys module (27–32)</span><i class="chip plan">Planned</i></div>
+          <div class="item"><span>Timeline + Consent (19, 20), on the profile</span><i class="chip ui">UI ready</i></div>
+          <div class="item"><span>Analytics (33–38)</span><i class="chip plan">Planned</i></div>
+          <div class="item"><span>Admin &amp; AI setup (39–44)</span><i class="chip plan">Planned</i></div>
+        </div>
+      </div>
+
+      <div class="phase">
+        <div class="phase-name"><b>7. Quality</b><span>W13–W14</span></div>
+        <div class="lane be"><span class="tag">Backend</span>
+          <div class="item"><span>Integration, regression and load tests</span><i class="chip plan">Planned</i></div>
+          <div class="item"><span>RBAC, audit log, retention, deletion</span><i class="chip plan">Planned</i></div>
+        </div>
+        <div class="contract"><div><code>RBAC per endpoint</code><small>same rules hide screens in the app</small></div></div>
+        <div class="lane fe"><span class="tag">App</span>
+          <div class="item"><span>Compliance &amp; ops screens (45–50)</span><i class="chip plan">Planned</i></div>
+          <div class="item"><span>Dark mode + theme choice, skeleton loading</span><i class="chip done">Done</i></div>
+          <div class="item"><span>Accessibility pass, device QA, UAT build</span><i class="chip plan">Planned</i></div>
+        </div>
+      </div>
+
+      <div class="phase">
+        <div class="phase-name"><b>8. Pilot</b><span>W15–W16</span></div>
+        <div class="lane be"><span class="tag">Backend</span>
+          <div class="item"><span>Production deploy + monitoring</span><i class="chip plan">Planned</i></div>
+          <div class="item"><span>Prompt and scoring tuning</span><i class="chip plan">Planned</i></div>
+        </div>
+        <div class="contract"><div><code>Go / no-go</code><small>pilot KPIs reviewed</small></div></div>
+        <div class="lane fe"><span class="tag">App</span>
+          <div class="item"><span>TestFlight + Play internal testing</span><i class="chip plan">Planned</i></div>
+          <div class="item"><span>Pilot feedback fixes</span><i class="chip plan">Planned</i></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. Backend build order -->
+  <section>
+    <div class="sec-head">
+      <span class="eyebrow">Fig. 2 · Backend</span>
+      <h2>Backend build order</h2>
+      <p>Arrows point from what you build first to what depends on it. The calling pipeline can't start until leads come in and pass the consent checks, so those two are next.</p>
+    </div>
+    <figure>
+      <div class="fig-body">
+<pre class="mermaid">
+%%{init: {"flowchart": {"useMaxWidth": false}}}%%
+flowchart TD
+  AUTH["Auth · roles · JWT ✓"] --> ONB["Onboarding + brokerage settings ✓"] --> TEAM["Team invites ✓"]
+  ONB -->|brokerage + calling hours| LEAD["Lead ingestion webhook ✓&lt;br/&gt;validate · dedupe · audit"]
+  LEAD --> CONS["Consent + eligibility ✓&lt;br/&gt;calling hours · opt-out"]
+  CONS -->|eligible leads| QUEUE["W6 · Call job queue&lt;br/&gt;retries · 60 s target"]
+  QUEUE --> TEL["W6–W7 · Telephony adapter&lt;br/&gt;Twilio / Exotel · status webhooks"]
+  TEL --> RT["W6–W8 · Voice runtime&lt;br/&gt;speech-to-text → LLM → text-to-speech"]
+  ONB -->|persona + voice| RT
+  RT --> QUAL["W7–W8 · Qualification extraction&lt;br/&gt;budget · area · timeline · type · pre-approval"]
+  QUAL --> SCORE["W8 · Scoring + routing&lt;br/&gt;Hot / Warm / Cold"]
+  QUAL -->|summary + fields| CRM["W8–W9 · Zoho CRM sync&lt;br/&gt;upsert · retries"]
+  QUAL -->|booking step| CAL["W9–W10 · Calendar adapter&lt;br/&gt;availability · 5-min hold · book"]
+  SCORE -->|Hot| HAND["W10 · Hot-lead queue&lt;br/&gt;FCM push · socket.io"]
+  SCORE -->|Warm / Cold| NUR["W11–W12 · Cadence engine · node-cron&lt;br/&gt;Day 1/2/4/7 · quiet hours"]
+  MSG["W10–W11 · Messaging adapters&lt;br/&gt;SMS · WhatsApp · email"] --> NUR
+  CONS -->|suppression list| NUR
+  SCORE --> ANA["W11–W12 · Dashboard + analytics APIs"]
+  ONB -.->|edit later| ADM["W11–W12 · Admin config APIs&lt;br/&gt;persona · scripts · rules"]
+  classDef done fill:#E3F5EA,stroke:#1C7643,color:#0E3B22
+  classDef next fill:#FFF1D6,stroke:#C98A12,color:#4D3200
+  classDef plan fill:#EEF1F7,stroke:#7A86A6,color:#1B2440
+  class AUTH,ONB,TEAM,LEAD,CONS done
+  class QUEUE,TEL next
+  class RT,QUAL,SCORE,CRM,CAL,HAND,MSG,NUR,ANA,ADM plan
+</pre>
+      </div>
+      <figcaption><b>Green</b> is built, <b>amber</b> is next, <b>grey</b> is planned; weeks come from the spreadsheet. Quality work in W13–W14 (RBAC, audit log, retention, load tests) covers every module, so it isn't drawn. Each module follows the server's existing pattern: <code>routes/</code> → <code>controllers/</code> → <code>services/</code> → <code>models/</code>.</figcaption>
+    </figure>
+  </section>
+
+  <!-- 3. Backend runtime -->
+  <section>
+    <div class="sec-head">
+      <span class="eyebrow">Fig. 3 · Backend at runtime</span>
+      <h2>What the server does with one lead</h2>
+      <p>This is the path a single lead takes once everything in Fig. 2 is built. Every lead ends in one of three places: with an agent, in nurture, or suppressed.</p>
+    </div>
+    <figure>
+      <div class="fig-body">
+<pre class="mermaid">
+%%{init: {"flowchart": {"useMaxWidth": false}}}%%
+flowchart TD
+  SRC["Lead sources&lt;br/&gt;website · portals · Facebook"] -->|POST /api/leads/ingest| ING["Ingest&lt;br/&gt;validate · dedupe"]
+  ING --> ELIG{"Consent, DND and&lt;br/&gt;calling hours OK?"}
+  ELIG -->|no| SUP["Suppressed&lt;br/&gt;reason logged"]
+  ELIG -->|yes, within 60 s| QUE["Call queue"]
+  QUE -->|start call| TEL["Twilio / Exotel"]
+  TEL -->|audio stream| STT["Speech-to-text"]
+  STT --> LLM["LLM + tools"]
+  LLM --> TTS["Text-to-speech"]
+  TTS -->|audio stream| TEL
+  LLM -->|save answers| DB[("MongoDB&lt;br/&gt;lead · call · consent")]
+  LLM -->|hold slot · book| CAL["Calendar"]
+  TEL -->|call ended| POST["Post-call&lt;br/&gt;transcript · score"]
+  POST --> DB
+  POST -->|upsert| CRM["Zoho CRM"]
+  POST --> R{"Outcome"}
+  R -->|Hot| HOT["Hot-lead queue"]
+  HOT -->|FCM push| APP["Agent app"]
+  R -->|Warm / Cold / no answer| NUR["Nurture cron"]
+  NUR -->|SMS · WhatsApp · email| BUYER["Lead"]
+  R -->|opted out| SUP
+  DB -->|socket.io live updates| APP
+  classDef end1 fill:#E3F5EA,stroke:#1C7643,color:#0E3B22
+  classDef end2 fill:#F8EEFB,stroke:#9E60B4,color:#4F1A60
+  classDef end3 fill:#FDEEEE,stroke:#AE2F2F,color:#5C1414
+  class APP,HOT end1
+  class NUR,BUYER end2
+  class SUP end3
+</pre>
+      </div>
+      <figcaption><b>Green</b> goes to an agent, <b>purple</b> goes to nurture, <b>red</b> is suppressed. The voice loop between telephony, speech-to-text, the LLM and text-to-speech has to answer fast enough to sound natural, which is why it gets its own phase.</figcaption>
+    </figure>
+  </section>
+
+  <!-- 4. Frontend build order -->
+  <section>
+    <div class="sec-head">
+      <span class="eyebrow">Fig. 4 · App</span>
+      <h2>App build order</h2>
+      <p>Screen numbers match the screen flow. Edge labels name the API or channel a screen needs before it can show real data. Until then, build it with dummy data and a <code>TODO(backend)</code> marker, as you did for onboarding.</p>
+    </div>
+    <figure>
+      <div class="fig-body">
+<pre class="mermaid">
+%%{init: {"flowchart": {"useMaxWidth": false}}}%%
+flowchart TD
+  subgraph B["Built"]
+    T["Theme + shared widgets ✓"] --> S["Splash · 1 ✓"] --> L["Login + forgot password · 2 ✓"] --> O["Onboarding · 3 ✓&lt;br/&gt;admin · agent · team lead"]
+    API["API client + secure session ✓"]
+  end
+  O --> SH["App shell ✓&lt;br/&gt;role-based bottom tabs"]
+  API --> SH
+  SH --> HOME["Home dashboard · 4"]
+  SH --> PRO["Profile · 10"]
+  HOME -->|GET /api/leads| LEADS["Leads + search · 5, 11"]
+  LEADS -->|GET /api/leads/:id| LP["Lead profile · 13"]
+  LP --> LD["Qualification · Score · Timeline · Consent&lt;br/&gt;16, 17, 19, 20"]
+  HOME -->|GET /api/calls| LIVE["Live calls · 6"]
+  LIVE -->|socket.io call events| MON["Live call monitor · 12"]
+  MON --> CD["Call detail + transcript · 14, 15"]
+  SH -->|FCM push| HOT["Hot lead inbox · 7"]
+  HOT -->|POST /api/handoffs/:id/accept| HAND["Handoff and viewings · 21–26"]
+  SH -->|GET /api/viewings| VW["Viewings · 8"]
+  VW --> BK["Book viewing · 18"]
+  SH -->|GET /api/nurture| NU["Nurture · 9, 27–32"]
+  HOME -->|GET /api/analytics| AN["Analytics · 33–38"]
+  O -.->|reuse step widgets| ADM["Admin and AI setup · 39–44"]
+  ADM --> COMP["Compliance and ops · 45–50"]
+  classDef done fill:#E3F5EA,stroke:#1C7643,color:#0E3B22
+  classDef next fill:#FFF1D6,stroke:#C98A12,color:#4D3200
+  classDef ui fill:#F3F0FF,stroke:#8D7FE0,color:#2A1F73
+  classDef plan fill:#EEF1F7,stroke:#7A86A6,color:#1B2440
+  class T,S,L,O,API,SH done
+  class HOME,PRO,LEADS,LIVE,HOT,VW,NU,LP,LD,MON,CD,BK ui
+  class HAND next
+  class AN,ADM,COMP plan
+</pre>
+      </div>
+      <figcaption><b>Green</b> is built, <b>violet</b> is UI ready (demo data), <b>amber</b> is next, <b>grey</b> is planned. After every branch comes the same finish: tests, accessibility and dark-mode pass (W13–W14), then a TestFlight and Play internal build (W15). Endpoint names after <code>/api/onboarding</code> are proposals. Agree on them with the backend before each phase starts, then record them in the server README's endpoint table.</figcaption>
+    </figure>
+  </section>
+
+  <!-- 5. One feature end to end -->
+  <section>
+    <div class="sec-head">
+      <span class="eyebrow">Fig. 5 · Per feature</span>
+      <h2>Every feature follows the same nine steps</h2>
+      <p>Build the backend half first, test it in Swagger, then build the app half on top of it. Sign-in is shown below because it already works this way.</p>
+    </div>
+    <div class="strip">
+      <div class="step be"><b>1 · Server</b><p>Mongoose model</p><small><code>models/</code></small></div>
+      <div class="step be"><b>2 · Server</b><p>Service + rules</p><small><code>services/</code></small></div>
+      <div class="step be"><b>3 · Server</b><p>Controller, route, validation</p><small><code>controllers/ routes/</code></small></div>
+      <div class="step be"><b>4 · Server</b><p>Swagger doc + mocha test</p><small><code>swaggerApis/ unitTest/</code></small></div>
+      <div class="step fe"><b>5 · App</b><p>Dart model + fromJson</p><small><code>models/</code></small></div>
+      <div class="step fe"><b>6 · App</b><p>Service + repository</p><small><code>services/ repositories/</code></small></div>
+      <div class="step fe"><b>7 · App</b><p>Riverpod controller + state</p><small><code>controllers/</code></small></div>
+      <div class="step fe"><b>8 · App</b><p>Screen + widgets</p><small><code>screens/ widgets/</code></small></div>
+      <div class="step fe"><b>9 · App</b><p>Controller tests</p><small><code>test/features/</code></small></div>
+    </div>
+    <figure>
+      <div class="fig-body">
+<pre class="mermaid">
+%%{init: {"sequence": {"useMaxWidth": false}}}%%
+sequenceDiagram
+  participant S as LoginScreen
+  participant C as LoginController
+  participant R as AuthRepository
+  participant A as ApiClient · dio
+  participant E as auth.route + controller
+  participant V as auth.service
+  participant M as MongoDB
+  S->>C: signIn(email, password)
+  C->>R: login()
+  R->>A: POST /api/auth/login
+  A->>E: email, password, entityType
+  E->>V: validate, verify password
+  V->>M: find employee
+  M-->>V: employee
+  V-->>E: accessToken
+  E-->>A: 200 accessToken
+  A-->>R: token saved in secure storage
+  R->>A: GET /api/auth/me
+  A-->>R: user, brokerageName, onboardingCompleted
+  R-->>C: AppUser
+  C-->>S: LoginSucceeded(user)
+  S->>S: open Onboarding or Home
+</pre>
+      </div>
+      <figcaption><b>One request, both codebases.</b> The screen never calls the API directly, and the route never touches MongoDB directly. Keeping those layers separate is what lets each half be built and tested on its own.</figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <div class="notes">
+      <h3>Notes</h3>
+      <ul>
+        <li>The project documents suggested FastAPI and PostgreSQL. Your server is Express 5 and MongoDB, so these graphs follow the server you have.</li>
+        <li>Statuses come from the code in <code>Mergro/server</code> and <code>Mergro-Mobile-App</code>. Discovery and architecture items show as planned because nothing in the code records them.</li>
+        <li><b>UI ready</b> screens load demo data after a short delay and mark each missing call with <code>TODO(backend)</code> in the code; the endpoint list lives in <code>skill.md</code>'s TODO(backend) table. They become Done when their API is connected.</li>
+        <li>The voice runtime (speech-to-text, LLM, text-to-speech) is the riskiest piece. Building a throwaway test call early in phase 4 shows whether response times are fast enough before the rest depends on it.</li>
+      </ul>
+    </div>
+  </section>
+</main>

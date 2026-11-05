@@ -36,6 +36,11 @@ const BrokerageSchema = new Schema(
       disclosesAi: { type: Boolean, default: true },
     },
     status: { type: String, default: "Setup" }, // Setup | Active
+    /** sha256 of the lead-ingestion API key; the plain key is shown once. */
+    ingestKeyHash: { type: String, index: true },
+    /** First characters of the key, so admins can tell keys apart. */
+    ingestKeyPrefix: String,
+    ingestKeyCreatedAt: Date,
     ownerId: { type: Schema.ObjectId, ref: "Employees" },
     active: { type: Boolean, default: true },
     created: { type: Date, default: Date.now },

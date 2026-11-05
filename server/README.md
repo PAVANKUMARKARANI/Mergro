@@ -3,6 +3,14 @@
 Backend for the Mergro mobile app (`~/Projects/Mergro-Mobile-App`), built on the Express + MongoDB
 template described further below.
 
+**Status (5 Nov 2026):** auth, onboarding and team invites are live and used by the app. The leads
+API (ingestion webhook, eligibility, list / profile / timeline, consent, suppression) is built and
+tested; the app is not connected to it yet. The app's
+main screens (leads, live calls, hot leads, viewings, nurture, dashboard) run on demo data until
+the matching endpoints exist; next on the server are the lead / call data model, the lead ingestion
+webhook and consent / eligibility checks. Phase plan: the "Mergro Build Flow" artifact (local copy
+`~/Projects/Mergro/mergro-build-flow.html`).
+
 ## Run locally
 
 1. `npm install` (Node 22 per `package.json`; also verified on Node 26).
@@ -10,7 +18,8 @@ template described further below.
    git-ignored; never commit secrets or put them in code.
 3. `npm run seed` once: creates the `settings` document, the 5 Mergro roles, the reset/invite email
    templates and demo users `admin@yopmail.com`, `agent@yopmail.com`, `lead@yopmail.com` with
-   password `Emp1234$` (set `SEED_USER_PASSWORD` to choose another). Safe to re-run.
+   password `Emp1234$` (set `SEED_USER_PASSWORD` to choose another), 13 demo leads in the demo
+   admin's brokerage, and that brokerage's lead-ingestion key (printed once). Safe to re-run.
 4. `node server-start.js` → `http://localhost:2282/api` (health check: `/api/health-check`).
 
 ## Endpoints used by the app
@@ -26,6 +35,14 @@ template described further below.
 | PUT | `/api/onboarding/steps/:stepId` | `{data}` (validated in `services/onboardingSteps.js`) or `{skipped: true}` |
 | POST | `/api/onboarding/complete` | Needs every required step; activates an admin's brokerage |
 | POST | `/api/team/invites` | Admins: `{invites: [{email, role}]}` → per-email results |
+| POST | `/api/leads/ingest` | **Lead sources**, header `x-mergro-key`. `{name, phone, source, consent: {call, sms?, whatsapp?, email?}, email?, area?, budget?, propertyType?, sourceRef?, consentText?}` → 201 new / 200 merged (same phone or email within 30 days) with the eligibility verdict. 120 a minute per key |
+| GET | `/api/leads` | `q`, `temperature` (hot,warm,cold), `source`, `status`, `area`, `days`, `page`, `limit` → `{items, total, page, limit}`. Sales agents see their own and unassigned leads; other roles the whole brokerage |
+| GET | `/api/leads/summary` | Today's counts in the brokerage's time zone |
+| GET | `/api/leads/:leadId` · `/timeline` | Profile (consent, qualification, score reasons) · activity, newest first. Leads outside the user's scope are 404 |
+| PUT | `/api/leads/:leadId/consent` | `{channel, granted: false}` — withdrawal only; only the lead can grant consent |
+| POST | `/api/leads/:leadId/suppress` | Do not contact: every channel withdrawn |
+| POST | `/api/leads/:leadId/call-back` · `/messages` | Recorded on the timeline (202) until the dialler and messaging connectors exist; refused without consent |
+| GET / POST | `/api/brokerage/ingest-key` | Admins: key prefix / create or rotate the ingestion key (plain key shown once, stored hashed) |
 
 Errors follow the template: HTTP 200 with `{errorCode: "9001", errorMessage}`; expired sessions
 also carry `sessionExpired: true`. Emails are only sent when the `settings` document has

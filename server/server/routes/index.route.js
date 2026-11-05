@@ -79,4 +79,10 @@ router.use("/onboarding", onboardingRoutes);
 const teamRoutes = require("./team.route");
 router.use("/team", teamRoutes);
 
+const leadRoutes = require("./lead.route");
+router.use("/leads", leadRoutes);
+
+const brokerageRoutes = require("./brokerage.route");
+router.use("/brokerage", brokerageRoutes);
+
 export default router;
